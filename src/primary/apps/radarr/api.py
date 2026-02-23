@@ -175,10 +175,31 @@ def get_cutoff_unmet_movies(api_url: str, api_key: str, api_timeout: int, monito
         radarr_logger.error("Failed to retrieve quality profiles from Radarr API.")
         return None
     
-    # Create a map for easy lookup: profile_id -> cutoff_format_score (or cutoff quality ID)
-    # Radarr profiles have 'cutoff' (quality ID) and potentially 'cutoffFormatScore'
-    profile_cutoff_map = {p['id']: p.get('cutoff') for p in profiles}
-    # TODO: Potentially incorporate cutoffFormatScore if needed for more complex logic
+    # Build a map of profile_id -> {cutoff_id, quality_rank} where quality_rank maps
+    # each quality ID to its position in the profile's ordered items list.
+    # Radarr quality profile 'items' are ordered from lowest to highest quality,
+    # and 'cutoff' is the quality ID of the minimum acceptable quality.
+    profile_map = {}
+    for p in profiles:
+        # Build a rank map from the profile's items list
+        # Items can be individual qualities or groups containing sub-qualities
+        rank = 0
+        quality_rank = {}
+        for item in p.get('items', []):
+            if item.get('quality'):
+                # Individual quality entry
+                quality_rank[item['quality']['id']] = rank
+                rank += 1
+            elif item.get('items'):
+                # Quality group - all sub-qualities share the same rank
+                for sub_item in item['items']:
+                    if sub_item.get('quality'):
+                        quality_rank[sub_item['quality']['id']] = rank
+                rank += 1
+        profile_map[p['id']] = {
+            'cutoff_id': p.get('cutoff'),
+            'quality_rank': quality_rank,
+        }
 
     unmet_movies = []
     for movie in movies:
@@ -189,20 +210,18 @@ def get_cutoff_unmet_movies(api_url: str, api_key: str, api_timeout: int, monito
 
         # Apply monitored_only filter if requested
         if not monitored_only or is_monitored:
-            if has_file and movie_file and profile_id in profile_cutoff_map:
-                cutoff_quality_id = profile_cutoff_map[profile_id]
+            if has_file and movie_file and profile_id in profile_map:
+                profile_info = profile_map[profile_id]
+                cutoff_id = profile_info['cutoff_id']
+                quality_rank = profile_info['quality_rank']
                 current_quality_id = movie_file.get("quality", {}).get("quality", {}).get("id")
-                
-                # Simple check: if current quality ID is less than cutoff quality ID
-                # This assumes quality IDs are ordered correctly (lower ID = lower quality)
-                # A more robust check might involve comparing quality *names* or *scores* if IDs aren't reliable order indicators.
-                if current_quality_id is not None and cutoff_quality_id is not None and current_quality_id < cutoff_quality_id:
-                    # TODO: Add check for cutoffFormatScore if necessary
+
+                # Compare by rank position in the profile, not by raw quality ID
+                current_rank = quality_rank.get(current_quality_id)
+                cutoff_rank = quality_rank.get(cutoff_id)
+
+                if current_rank is not None and cutoff_rank is not None and current_rank < cutoff_rank:
                     unmet_movies.append(movie)
-            # else: # Log why a movie wasn't considered unmet (optional)
-            #     if not has_file: radarr_logger.debug(f"Skipping {movie.get('title')} - no file.")
-            #     elif not movie_file: radarr_logger.debug(f"Skipping {movie.get('title')} - no movieFile info.")
-            #     elif profile_id not in profile_cutoff_map: radarr_logger.debug(f"Skipping {movie.get('title')} - profile ID {profile_id} not found.")
 
     radarr_logger.debug(f"Found {len(unmet_movies)} cutoff unmet movies (monitored_only={monitored_only}).")
     return unmet_movies

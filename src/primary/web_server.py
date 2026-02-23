@@ -464,8 +464,7 @@ def save_general_settings():
         # Update logging levels immediately when general settings are changed
         update_logging_levels()
         
-        # Return all settings
-        return jsonify(settings_manager.get_all_settings())
+        return jsonify({"success": True})
     else:
         return jsonify({"success": False, "error": "Failed to save general settings"}), 500
 
@@ -544,9 +543,7 @@ def api_reset_settings():
     success = settings_manager.save_settings(app_name, default_settings) # Corrected function name
 
     if success:
-        # Return the full updated config after reset
-        all_settings = settings_manager.get_all_settings() # Corrected function name
-        return jsonify(all_settings)
+        return jsonify({"success": True})
     else:
         return jsonify({"success": False, "error": f"Failed to save reset settings for {app_name}"}), 500
 

@@ -1,19 +1,12 @@
 <div class="sidebar" id="sidebar">
     <div class="sidebar-top-line"></div>
     <div class="logo-container">
-        <img src="/static/logo/256.png" alt="Huntarr Logo" class="logo logo-large">
-        <img src="/static/logo/32.png" alt="Huntarr Logo" class="logo logo-small">
-        <h1>Huntarr</h1>
+        <span class="logo logo-large" aria-label="NewtArr"><i class="fas fa-dragon"></i></span>
+        <span class="logo logo-small" aria-label="NewtArr"><i class="fas fa-dragon"></i></span>
+        <h1>NewtArr</h1>
     </div>
     
     <nav class="nav-menu">
-        <!-- Project Sponsors Link -->
-        <a href="https://github.com/sponsors/plexguide" class="nav-item" target="_blank" rel="noopener noreferrer">
-            <div class="nav-icon-wrapper heart-icon">
-                <i class="fas fa-heart"></i>
-            </div>
-            <span>Become A Sponsor</span>
-        </a>
         <!-- Core Navigation Group -->
         <div class="nav-group" style="margin-top: -10px;">
             <div class="nav-group-title">Core</div>
@@ -66,17 +59,6 @@
             </a>
         </div>
         
-        <!-- Resources Group -->
-        <div class="nav-group">
-            <div class="nav-group-title">Resources</div>
-            <a href="https://github.com/plexguide/Unraid_Intel-ARC_Deployment" class="nav-item" target="_blank" rel="noopener noreferrer">
-                <div class="nav-icon-wrapper">
-                    <i class="fas fa-film"></i>
-                </div>
-                <span>My AV1 Guide</span>
-            </a>
-            <!-- Project Sponsors removed from here and placed above CORE -->
-        </div>
     </nav>
 </div>
 
@@ -202,14 +184,25 @@
     }
     
     .logo {
-        width: 60px; /* 50% bigger than original 40px */
+        width: 60px;
         height: 60px;
         margin-right: 15px;
         border-radius: 50%;
         animation: logo-glow 10s infinite ease-in-out;
         transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(20, 30, 45, 0.6);
+        flex-shrink: 0;
     }
-    
+
+    .logo i {
+        font-size: 28px;
+        color: #e0e6ed;
+        filter: drop-shadow(0 0 4px rgba(52, 152, 219, 0.5));
+    }
+
     .logo-small {
         display: none;
     }
@@ -225,7 +218,7 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
-    
+
     .nav-menu {
         display: flex;
         flex-direction: column;
@@ -391,12 +384,16 @@
         .logo-large {
             display: none;
         }
-        
+
         .logo-small {
-            display: block;
+            display: flex;
             width: 32px;
             height: 32px;
             margin: 0;
+        }
+
+        .logo-small i {
+            font-size: 18px;
         }
         
         .nav-menu {

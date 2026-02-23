@@ -100,6 +100,8 @@ except Exception as e:
     sys.exit(1)
 
 
+_waitress_server = None  # Handle to Waitress server for graceful shutdown
+
 def run_background_tasks():
     """Runs the Huntarr background processing."""
     bg_logger = get_logger("HuntarrBackground") # Use app's logger
@@ -113,6 +115,7 @@ def run_background_tasks():
 
 def run_web_server():
     """Runs the Flask web server using Waitress in production."""
+    global _waitress_server
     web_logger = get_logger("WebServer") # Use app's logger
     debug_mode = os.environ.get('DEBUG', 'false').lower() == 'true'
     host = os.environ.get('FLASK_HOST', '0.0.0.0')
@@ -121,36 +124,36 @@ def run_web_server():
     web_logger.info(f"Starting web server on {host}:{port} (Debug: {debug_mode})...")
 
     if debug_mode:
-        # Use Flask's development server for debugging (less efficient, auto-reloads)
-        # Note: use_reloader=True can cause issues with threads starting twice.
         web_logger.warning("Running in DEBUG mode with Flask development server.")
         try:
             app.run(host=host, port=port, debug=True, use_reloader=False)
         except Exception as e:
             web_logger.exception(f"Flask development server failed: {e}")
-            # Signal background thread to stop if server fails critically
             if not stop_event.is_set():
                 stop_event.set()
     else:
-        # Use Waitress for production
         try:
-            from waitress import serve
+            from waitress import create_server
             web_logger.info("Running with Waitress production server.")
-            # Adjust threads as needed, default is 4
-            serve(app, host=host, port=port, threads=8)
+            _waitress_server = create_server(app, host=host, port=port, threads=8)
+            _waitress_server.run()
         except ImportError:
-            web_logger.error("Waitress not found. Falling back to Flask development server (NOT recommended for production).")
-            web_logger.error("Install waitress ('pip install waitress') for production use.")
+            web_logger.error("Waitress not found. Falling back to Flask development server.")
             try:
                 app.run(host=host, port=port, debug=False, use_reloader=False)
             except Exception as e:
                 web_logger.exception(f"Flask development server (fallback) failed: {e}")
-                # Signal background thread to stop if server fails critically
                 if not stop_event.is_set():
                     stop_event.set()
+        except OSError as e:
+            # Bad file descriptor is expected when .close() is called during shutdown
+            if not stop_event.is_set():
+                web_logger.exception(f"Waitress server failed: {e}")
+                stop_event.set()
+            else:
+                web_logger.info("Waitress server stopped.")
         except Exception as e:
             web_logger.exception(f"Waitress server failed: {e}")
-            # Signal background thread to stop if server fails critically
             if not stop_event.is_set():
                 stop_event.set()
 
@@ -159,7 +162,9 @@ def main_shutdown_handler(signum, frame):
     huntarr_logger.warning(f"Received signal {signal.Signals(signum).name}. Initiating shutdown...")
     if not stop_event.is_set():
         stop_event.set()
-    # The rest of the cleanup happens after run_web_server() returns or in the finally block.
+    # Close Waitress so serve()/run() unblocks and the finally block can execute
+    if _waitress_server is not None:
+        _waitress_server.close()
 
 if __name__ == '__main__':
     # Register signal handlers for graceful shutdown in the main process
@@ -198,7 +203,7 @@ if __name__ == '__main__':
         # Wait for the background thread to finish cleanly
         if background_thread and background_thread.is_alive():
             huntarr_logger.info("Waiting for background tasks to complete...")
-            background_thread.join(timeout=30) # Wait up to 30 seconds
+            background_thread.join(timeout=5) # Keep under Docker's 10s SIGKILL window
 
             if background_thread.is_alive():
                 huntarr_logger.warning("Background thread did not stop gracefully within the timeout.")

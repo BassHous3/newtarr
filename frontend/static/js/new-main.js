@@ -132,10 +132,9 @@ let huntarrUI = {
         
         // App tabs & Settings Tabs
         this.elements.appTabs = document.querySelectorAll('.app-tab'); // For logs section
-        this.elements.logOptions = document.querySelectorAll('.log-option'); // New: replaced logTabs with logOptions
-        this.elements.currentLogApp = document.getElementById('current-log-app'); // New: dropdown current selection text
-        this.elements.logDropdownBtn = document.querySelector('.log-dropdown-btn'); // New: dropdown toggle button
-        this.elements.logDropdownContent = document.querySelector('.log-dropdown-content'); // New: dropdown content
+        // Note: custom dropdown elements (.log-option, .log-dropdown-btn, etc.) were
+        // replaced by native <select> elements in the templates. These cached references
+        // are kept as empty/null for compatibility with any code that checks them.
         
         // History dropdown elements
         this.elements.historyOptions = document.querySelectorAll('.history-option'); // History dropdown options
@@ -187,17 +186,6 @@ let huntarrUI = {
     
     // Set up event listeners
     setupEventListeners: function() {
-        // Global dropdown handling - close all dropdowns when clicking on any option
-        document.addEventListener('click', (e) => {
-            // If the clicked element is a dropdown option (has class 'log-option')
-            if (e.target.classList.contains('log-option')) {
-                // Find all dropdown content elements and close them
-                document.querySelectorAll('.log-dropdown-content').forEach(dropdown => {
-                    dropdown.classList.remove('show');
-                });
-            }
-        });
-        
         // Navigation
         document.addEventListener('click', (e) => {
             // Navigation link handling
@@ -258,34 +246,6 @@ let huntarrUI = {
         this.elements.appTabs.forEach(tab => {
             tab.addEventListener('click', (e) => this.handleAppTabChange(e));
         });
-        
-        // Log options dropdown
-        this.elements.logOptions.forEach(option => {
-            option.addEventListener('click', (e) => this.handleLogOptionChange(e));
-        });
-        
-        // Log dropdown toggle
-        if (this.elements.logDropdownBtn) {
-            this.elements.logDropdownBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation(); // Prevent event bubbling
-                
-                // Close any other open dropdowns first
-                if (this.elements.historyDropdownContent && this.elements.historyDropdownContent.classList.contains('show')) {
-                    this.elements.historyDropdownContent.classList.remove('show');
-                }
-                
-                // Toggle this dropdown
-                this.elements.logDropdownContent.classList.toggle('show');
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.log-dropdown') && this.elements.logDropdownContent.classList.contains('show')) {
-                    this.elements.logDropdownContent.classList.remove('show');
-                }
-            });
-        }
         
         // History dropdown toggle
         if (this.elements.historyDropdownBtn) {
@@ -1309,8 +1269,8 @@ let huntarrUI = {
             return response.json();
         })
         .then(savedConfig => {
-            console.log('[huntarrUI] Settings saved successfully. Full config received:', savedConfig);
-            
+            console.log('[huntarrUI] Settings saved successfully:', savedConfig);
+
             // If any authentication bypass setting was changed, reload the page
             if (isLocalAccessBypassChanged || isProxyAuthBypassChanged) {
                 this.showNotification('Settings saved successfully. Reloading page to apply authentication changes...', 'success');
@@ -1319,27 +1279,12 @@ let huntarrUI = {
                 }, 1500);
                 return;
             }
-            
+
             this.showNotification('Settings saved successfully', 'success');
 
-            // Update original settings state with the full config returned from backend
-            if (typeof savedConfig === 'object' && savedConfig !== null) {
-                this.originalSettings = JSON.parse(JSON.stringify(savedConfig));
-            } else {
-                console.error('[huntarrUI] Invalid config received from backend after save:', savedConfig);
-                this.loadAllSettings();
-                return;
-            }
-
-            // Re-populate the form with the saved data
-            const currentAppSettings = this.originalSettings[app] || {};
-            
-            // Preserve instances data if missing in the response but was in our sent data
-            if (app === 'sonarr' && !currentAppSettings.instances && settings.instances) {
-                currentAppSettings.instances = settings.instances;
-            }
-            
-            this.populateSettingsForm(app, currentAppSettings);
+            // Reload all settings from the server to refresh form state
+            // (save responses no longer include full config to avoid cross-app credential exposure)
+            this.loadAllSettings();
 
             // Update connection status and UI
             this.checkAppConnection(app);
@@ -2204,8 +2149,9 @@ let huntarrUI = {
             });
     },
 
-    // Load latest version from GitHub releases
+    // Load latest version from GitHub releases (disabled - upstream repo removed)
     loadLatestVersion: function() {
+        return;
         HuntarrUtils.fetchWithTimeout('https://api.github.com/repos/plexguide/Huntarr.io/releases/latest')
             .then(response => {
                 if (!response.ok) {
@@ -2236,8 +2182,9 @@ let huntarrUI = {
             });
     },
     
-    // Load latest beta version from GitHub tags
+    // Load latest beta version from GitHub tags (disabled - upstream repo removed)
     loadBetaVersion: function() {
+        return;
         HuntarrUtils.fetchWithTimeout('https://api.github.com/repos/plexguide/Huntarr.io/tags?per_page=100')
             .then(response => {
                 if (!response.ok) {
@@ -2284,8 +2231,9 @@ let huntarrUI = {
             });
     },
 
-    // Load GitHub star count
+    // Load GitHub star count (disabled - upstream repo removed)
     loadGitHubStarCount: function() {
+        return;
         const starsElement = document.getElementById('github-stars-value');
         if (!starsElement) return;
         

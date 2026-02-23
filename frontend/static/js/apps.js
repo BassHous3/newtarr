@@ -127,12 +127,6 @@ const appsModule = {
     // Cache DOM elements
     cacheElements: function() {
         this.elements = {
-            // Apps dropdown
-            appsOptions: document.querySelectorAll('#appsSection .log-option'),
-            currentAppsApp: document.getElementById('current-apps-app'),
-            appsDropdownBtn: document.querySelector('#appsSection .log-dropdown-btn'),
-            appsDropdownContent: document.querySelector('#appsSection .log-dropdown-content'),
-            
             // Apps panels
             appAppsPanels: document.querySelectorAll('.app-apps-panel'),
             
@@ -152,30 +146,6 @@ const appsModule = {
             });
         }
         
-        // Dropdown toggle
-        if (this.elements.appsDropdownBtn) {
-            this.elements.appsDropdownBtn.addEventListener('click', () => {
-                this.elements.appsDropdownContent.classList.toggle('show');
-                
-                // Close all other dropdowns
-                document.querySelectorAll('.log-dropdown-content.show').forEach(dropdown => {
-                    if (dropdown !== this.elements.appsDropdownContent) {
-                        dropdown.classList.remove('show');
-                    }
-                });
-            });
-        }
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', e => {
-            if (!e.target.matches('#appsSection .log-dropdown-btn') && 
-                !e.target.closest('#appsSection .log-dropdown-btn')) {
-                if (this.elements.appsDropdownContent && this.elements.appsDropdownContent.classList.contains('show')) {
-                    this.elements.appsDropdownContent.classList.remove('show');
-                }
-            }
-        });
-
         // Save button
         if (this.elements.saveAppsButton) {
             this.elements.saveAppsButton.addEventListener('click', (event) => this.saveApps(event));

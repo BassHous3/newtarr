@@ -3,27 +3,13 @@
     <div class="top-color-line"></div>
     <div class="topbar-section left">
         <div class="page-title" id="currentPageTitle"></div>
+        <span class="topbar-tagline">a neutered fork of Huntarr v6.6.3, from simpler times, maintained by <a href="https://store.elfhosted.com" target="_blank" rel="noopener">ElfHosted</a></span>
     </div>
     <div class="topbar-section center">
         <div class="version-bar">
             <div class="version-item">
                 <i class="fas fa-code-branch version-icon"></i>
-                <span>Version <a href="https://github.com/plexguide/Huntarr.io/releases" target="_blank"><span id="version-value">6.2.1</span></a></span>
-            </div>
-            <div class="version-divider"></div>
-            <div class="version-item">
-                <i class="fas fa-cloud-download-alt version-icon"></i>
-                <span>Latest: <a href="https://github.com/plexguide/Huntarr.io/releases" target="_blank"><span id="latest-version-value">6.2.1</span></a></span>
-            </div>
-            <div class="version-divider"></div>
-            <div class="version-item">
-                <i class="fas fa-star version-icon star-icon"></i>
-                <span><a href="https://github.com/plexguide/huntarr" target="_blank"><span id="github-stars-value">764</span></a></span>
-            </div>
-            <div class="version-divider"></div>
-            <div class="version-item">
-                <i class="fas fa-code version-icon"></i>
-                <span class="developer-credit">Developer: <a href="https://github.com/Admin9705/" target="_blank">Admin9705</a></span>
+                <span>Version <span id="version-value">6.6.3</span></span>
             </div>
         </div>
     </div>
@@ -59,11 +45,11 @@
         left: 0;
         right: 0;
         height: 1px;
-        background: linear-gradient(90deg, rgba(52, 152, 219, 0.6), rgba(155, 89, 182, 0.6)); /* Sonarr blue to Whisparr purple */
+        background: linear-gradient(90deg, rgba(80, 118, 46, 0.6), rgba(141, 158, 64, 0.6));
         z-index: 2;
-        box-shadow: 0 0 8px rgba(52, 152, 219, 0.4); /* Add subtle glow */
+        box-shadow: 0 0 8px rgba(80, 118, 46, 0.4);
     }
-    
+
     /* Add subtle colored accent to the bottom of the top bar */
     .top-bar::before {
         content: '';
@@ -72,7 +58,7 @@
         left: 0;
         right: 0;
         height: 1px;
-        background: linear-gradient(90deg, rgba(52, 152, 219, 0.6), rgba(155, 89, 182, 0.6)); /* Sonarr blue to Whisparr purple */
+        background: linear-gradient(90deg, rgba(80, 118, 46, 0.6), rgba(141, 158, 64, 0.6));
         z-index: 1;
     }
     
@@ -110,6 +96,22 @@
         text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         letter-spacing: 0.5px;
     }
+
+    .topbar-tagline {
+        font-size: 11px;
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.3);
+        margin-left: 12px;
+        white-space: nowrap;
+    }
+    .topbar-tagline a {
+        color: #8D9E40;
+        text-decoration: none;
+    }
+    .topbar-tagline a:hover {
+        color: #a8b84d;
+        text-decoration: underline;
+    }
     
     .version-bar {
         display: flex;
@@ -143,9 +145,9 @@
     }
     
     .version-icon {
-        color: #3498db;
+        color: #8D9E40;
         font-size: 13px;
-        filter: drop-shadow(0 0 2px rgba(52, 152, 219, 0.4));
+        filter: drop-shadow(0 0 2px rgba(80, 118, 46, 0.4));
     }
     
     .star-icon {
@@ -159,13 +161,13 @@
     }
     
     .version-bar a {
-        color: #3498db;
+        color: #8D9E40;
         text-decoration: none;
         font-weight: 600;
         transition: all 0.2s ease;
         position: relative;
     }
-    
+
     .version-bar a::after {
         content: '';
         position: absolute;
@@ -173,12 +175,12 @@
         height: 1px;
         bottom: -1px;
         left: 0;
-        background-color: #3498db;
+        background-color: #8D9E40;
         transition: width 0.3s ease;
     }
-    
+
     .version-bar a:hover {
-        color: #5dade2;
+        color: #a8b84d;
     }
     
     .version-bar a:hover::after {
@@ -190,7 +192,7 @@
     }
     
     .developer-credit a {
-        color: #3498db;
+        color: #8D9E40;
         font-weight: 600;
     }
     
@@ -252,12 +254,16 @@
         .topbar-section.left {
             margin-right: 10px;
         }
-        
+
+        .topbar-tagline {
+            display: none;
+        }
+
         .topbar-section.center {
             flex-grow: 1;
             justify-content: flex-start;
         }
-        
+
         .topbar-section.right {
             display: none; /* Hide user info on mobile to save space */
         }
@@ -364,50 +370,11 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Connect to the loaded elements from home_section
-        const versionElement = document.getElementById('version-value');
-        const latestVersionElement = document.getElementById('latest-version-value');
-        const starsElement = document.getElementById('github-stars-value');
-        
-        // Function to get the values from localStorage if they exist
-        function updateVersionInfo() {
-            // Version
-            try {
-                const versionInfo = localStorage.getItem('huntarr-version-info');
-                if (versionInfo) {
-                    const parsedInfo = JSON.parse(versionInfo);
-                    if (parsedInfo.currentVersion) {
-                        versionElement.textContent = parsedInfo.currentVersion;
-                    }
-                    if (parsedInfo.latestVersion) {
-                        latestVersionElement.textContent = parsedInfo.latestVersion;
-                    }
-                    if (parsedInfo.betaVersion) {
-                        const betaVersionElement = document.getElementById('beta-version-value');
-                        if (betaVersionElement) {
-                            betaVersionElement.textContent = parsedInfo.betaVersion;
-                        }
-                    }
-                }
-                
-                // Stars
-                const starsInfo = localStorage.getItem('huntarr-github-stars');
-                if (starsInfo) {
-                    starsElement.textContent = starsInfo;
-                }
-            } catch (e) {
-                console.error('Error updating version info:', e);
-            }
+        var el = document.getElementById('version-value');
+        if (el) {
+            fetch('/version.txt').then(function(r) { return r.text(); })
+                .then(function(v) { el.textContent = v.trim(); })
+                .catch(function() {});
         }
-        
-        // Initial update
-        updateVersionInfo();
-        
-        // Watch for changes (in case the home page updates values)
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'huntarr-version-info' || e.key === 'huntarr-github-stars') {
-                updateVersionInfo();
-            }
-        });
     });
 </script>

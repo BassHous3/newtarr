@@ -254,19 +254,38 @@ def get_username_from_session(session_id: str) -> Optional[str]:
     # Return the stored username
     return active_sessions[session_id].get("username")
 
+_proxy_bypass_cache = {"value": None, "expires": 0}
+
 def authenticate_request():
-    """Flask route decorator to check if user is authenticated"""
+    """Flask before_request handler to check if user is authenticated"""
+    # Check proxy_auth_bypass FIRST — before user_exists() so fresh deployments
+    # behind a reverse-proxy SSO never get stuck on the setup screen.
+    # Cached for 60s since this is a deployment-level setting, not toggled at runtime.
+    now = time.time()
+    if _proxy_bypass_cache["value"] is None or now > _proxy_bypass_cache["expires"]:
+        try:
+            from src.primary.settings_manager import load_settings
+            general_settings = load_settings("general")
+            _proxy_bypass_cache["value"] = general_settings.get("proxy_auth_bypass", False)
+        except Exception as e:
+            logger.error(f"Error loading general settings: {e}", exc_info=True)
+            _proxy_bypass_cache["value"] = False
+        _proxy_bypass_cache["expires"] = now + 60
+
+    if _proxy_bypass_cache["value"]:
+        return None
+
     # If no user exists, redirect to setup
     if not user_exists():
         script_root = request.script_root
         setup_path = f"{script_root}/setup"
         static_path = f"{script_root}/static/"
         api_setup_path = f"{script_root}/api/setup"
-        
+
         if request.path != setup_path and not request.path.startswith((static_path, api_setup_path)):
             return redirect(setup_path)
         return None
-    
+
     # Skip authentication for static files and the login/setup pages
     script_root = request.script_root
     static_path = f"{script_root}/static/"
@@ -276,39 +295,18 @@ def authenticate_request():
     api_setup_path = f"{script_root}/api/setup"
     favicon_path = f"{script_root}/favicon.ico"
     health_check_path = f"{script_root}/api/health"
-    
+
     if request.path.startswith((static_path, login_path, api_login_path, setup_path, api_setup_path)) or request.path in (favicon_path, health_check_path):
         return None
-    
-    # Load general settings
+
+    # Load general settings for local_access_bypass
     local_access_bypass = False
-    proxy_auth_bypass = False
     try:
-        # Force reload settings from disk to ensure we have the latest
         from src.primary.settings_manager import load_settings
-        from src.primary import settings_manager
-        
-        # Ensure we're getting fresh settings by clearing any cache
-        if hasattr(settings_manager, 'settings_cache'):
-            settings_manager.settings_cache = {}
-            
-        settings = load_settings("general")  # Specify 'general' as the app_type
-        general_settings = settings
+        general_settings = load_settings("general")
         local_access_bypass = general_settings.get("local_access_bypass", False)
-        proxy_auth_bypass = general_settings.get("proxy_auth_bypass", False)
-        logger.debug(f"Local access bypass setting: {local_access_bypass}")
-        logger.debug(f"Proxy auth bypass setting: {proxy_auth_bypass}")
-        
-        # Debug print all general settings
-        logger.debug(f"All general settings: {general_settings}")
-    except Exception as e:
-        logger.error(f"Error loading authentication bypass settings: {e}", exc_info=True)
-    
-    # Check if proxy auth bypass is enabled - this completely disables authentication
-    # Note: This has highest priority and is checked first (matching the "No Login Mode" in the UI)
-    if proxy_auth_bypass:
-        logger.info("Proxy authentication bypass is ENABLED (No Login Mode) - Authentication bypassed!")
-        return None
+    except Exception:
+        pass
     
     remote_addr = request.remote_addr
     logger.info(f"Request IP address: {remote_addr}")
@@ -416,7 +414,7 @@ def generate_2fa_secret(username: str) -> Tuple[str, str]:
     totp = pyotp.TOTP(secret)
     
     # Get the provisioning URI - Use the actual username here
-    uri = totp.provisioning_uri(name=username, issuer_name="Huntarr")
+    uri = totp.provisioning_uri(name=username, issuer_name="NewtArr")
     
     # Generate QR code
     qr = qrcode.QRCode(

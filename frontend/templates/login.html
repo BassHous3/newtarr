@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Huntarr Login</title>
+    <title>NewtArr Login</title>
     <!-- Inline script to prevent theme flashing -->
     <script>
         // Check theme preference immediately before any rendering
@@ -16,11 +16,12 @@
             }
         })();
     </script>
-    <!-- Preload logo -->
-    <link rel="preload" href="/static/logo/256.png" as="image" fetchpriority="high">
+    <!-- Logo is now a FontAwesome icon, no preload needed -->
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="/static/logo/16.png">
+    <!-- ElfHosted brand overrides -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦎</text></svg>" type="image/svg+xml">
     <!-- Preload script to prevent flashing -->
     <script src="/static/js/theme-preload.js"></script>
     <!-- Modern login styles -->
@@ -52,18 +53,40 @@
             border-bottom: 1px solid rgba(90, 109, 137, 0.15);
         }
         
+        @keyframes logo-glow {
+            0%   { box-shadow: 0 0 15px #50762E, 0 0 5px rgba(80, 118, 46, 0.4); }
+            25%  { box-shadow: 0 0 15px #8D9E40, 0 0 5px rgba(141, 158, 64, 0.4); }
+            50%  { box-shadow: 0 0 15px #36511F, 0 0 5px rgba(54, 81, 31, 0.4); }
+            75%  { box-shadow: 0 0 15px #8D9E40, 0 0 5px rgba(141, 158, 64, 0.4); }
+            100% { box-shadow: 0 0 15px #50762E, 0 0 5px rgba(80, 118, 46, 0.4); }
+        }
+
         .login-logo {
             width: 80px;
             height: 80px;
             margin-bottom: 10px;
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
             transition: transform 0.3s ease, opacity 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 50%;
+            background: rgba(20, 30, 45, 0.6);
+            animation: logo-glow 10s infinite ease-in-out;
         }
-        
+
+        .login-logo i {
+            font-size: 36px;
+            color: #e0e6ed;
+            filter: drop-shadow(0 0 4px rgba(80, 118, 46, 0.5));
+        }
+
         .login-logo.loaded {
             opacity: 1;
         }
-        
+
         .login-logo:hover {
             transform: scale(1.05);
         }
@@ -103,7 +126,7 @@
         
         .form-group label i {
             margin-right: 8px;
-            color: rgba(65, 105, 225, 0.9);
+            color: rgba(80, 118, 46, 0.9);
         }
         
         .form-group input {
@@ -118,8 +141,8 @@
         }
         
         .form-group input:focus {
-            border-color: rgba(65, 105, 225, 0.6);
-            box-shadow: 0 0 0 3px rgba(65, 105, 225, 0.2);
+            border-color: rgba(80, 118, 46, 0.6);
+            box-shadow: 0 0 0 3px rgba(80, 118, 46, 0.2);
             outline: none;
         }
         
@@ -149,7 +172,7 @@
         }
         
         .login-button {
-            background: linear-gradient(135deg, #3a71e4 0%, #5481e6 100%);
+            background: linear-gradient(135deg, #50762E 0%, #6a8e3a 100%);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -160,18 +183,18 @@
             transition: all 0.3s ease;
             width: 100%;
             margin-top: 10px;
-            box-shadow: 0 4px 10px rgba(58, 113, 228, 0.3);
+            box-shadow: 0 4px 10px rgba(80, 118, 46, 0.3);
         }
-        
+
         .login-button:hover {
-            background: linear-gradient(135deg, #4a7deb 0%, #6491fa 100%);
+            background: linear-gradient(135deg, #6a8e3a 0%, #8D9E40 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(58, 113, 228, 0.4);
+            box-shadow: 0 6px 15px rgba(80, 118, 46, 0.4);
         }
-        
+
         .login-button:active {
             transform: translateY(0);
-            box-shadow: 0 2px 8px rgba(58, 113, 228, 0.3);
+            box-shadow: 0 2px 8px rgba(80, 118, 46, 0.3);
         }
         
         .additional-options {
@@ -215,8 +238,9 @@
 <body class="login-page">
     <div class="login-container">
         <div class="login-header">
-            <img src="/static/logo/256.png" alt="Huntarr Logo" class="login-logo" onload="this.classList.add('loaded')">
-            <h1>Huntarr</h1>
+            <span class="login-logo loaded" aria-label="NewtArr"><i class="fas fa-dragon"></i></span>
+            <h1>NewtArr</h1>
+            <p style="margin: 5px 0 0; color: rgba(255,255,255,0.4); font-size: 12px; font-style: italic;">a neutered fork of Huntarr v6.6.3, from simpler times, maintained by <a href="https://store.elfhosted.com" target="_blank" rel="noopener" style="color: #8D9E40;">ElfHosted</a></p>
         </div>
         <div class="login-form">
             <h2>Log in to your account</h2>
