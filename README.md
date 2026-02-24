@@ -8,6 +8,8 @@ The original Huntarr project was abandoned under controversial circumstances. Th
 
 NewtArr is based on v6.6.3, the last clean release before the controversial changes. It has been customized for use within [ElfHosted](https://store.elfhosted.com), but can be used standalone.
 
+Read the full announcement: [Huntarr Ends Its Hunt, NewtArr Takes It Up](https://store.elfhosted.com/blog/2026/02/24/huntarr-ends-its-hunt-newtarr-takes-it-up/)
+
 ## Huntarr Feature Timeline
 
 Understanding why we forked at v6.6.3:
