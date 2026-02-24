@@ -58,6 +58,14 @@ All configuration is done via the web UI. Settings are stored in `/config/`.
 - **Search Settings**: Control how many items to search per cycle, sleep duration, and API rate limits
 - **Scheduling**: Set up automated search schedules
 
+## Security
+
+A comprehensive security audit of the inherited v6.6.3 codebase has been performed. See [SECURITY-AUDIT.md](SECURITY-AUDIT.md) for the full report.
+
+**Key findings:** The original codebase contains several security issues (hardcoded secret key, weak password hashing, XSS via innerHTML, no CSRF protection). Most authentication-related issues are mitigated when running behind an SSO proxy (the intended ElfHosted deployment model). Standalone users should review the audit and apply the recommended mitigations.
+
+**Positive:** No telemetry, phone-home code, obfuscated code, or data exfiltration mechanisms were found in the v6.6.3 codebase.
+
 ## License
 
 This project is a fork of Huntarr.io. See [LICENSE](LICENSE) for details.
